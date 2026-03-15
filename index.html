@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <link rel="icon" type="image/png" href="cw.png">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CWNKER — Çok Yakında</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0A0A0A;
+  --white:#F5F3EE;
+  --cyan:#00AEEF;
+  --magenta:#EC008C;
+  --yellow:#FFF200;
+  --mono:'IBM Plex Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+}
+html,body{height:100%;}
+body{
+  background:var(--black);
+  color:var(--white);
+  font-family:var(--mono);
+  font-weight:300;
+  cursor:none;
+  display:flex;
+  flex-direction:column;
+  min-height:100svh;
+  overflow:hidden;
+}
+.cursor{position:fixed;width:10px;height:10px;background:var(--white);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width 0.2s,height 0.2s;mix-blend-mode:difference;}
+.cursor.big{width:40px;height:40px;}
+
+/* BG TEXT */
+.bg-text{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:var(--display);
+  font-size:clamp(80px,18vw,220px);
+  line-height:1;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,255,255,0.04);
+  user-select:none;
+  white-space:nowrap;
+  pointer-events:none;
+}
+
+/* NOISE OVERLAY */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ACCENT LINE TOP */
+.top-bar{
+  position:fixed;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg, var(--cyan) 0%, var(--magenta) 50%, var(--yellow) 100%);
+  z-index:10;
+}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  z-index:5;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.5rem 2.5rem;
+}
+.nav-logo img{height:102px;display:block;}
+.nav-tag{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;opacity:0.3;}
+
+/* MAIN */
+main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:6rem 2.5rem 2rem;
+  position:relative;
+  z-index:1;
+}
+
+.eyebrow{
+  font-size:11px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.35);
+  margin-bottom:1.5rem;
+  opacity:0;
+  animation:fadeUp 0.7s 0.2s ease forwards;
+}
+
+.title{
+  font-family:var(--display);
+  font-size:clamp(4rem,13vw,11rem);
+  line-height:0.9;
+  letter-spacing:-0.01em;
+  margin-bottom:2.5rem;
+  opacity:0;
+  animation:fadeUp 0.8s 0.35s ease forwards;
+}
+.title .c{color:var(--cyan);}
+.title .m{color:var(--magenta);}
+.title .y{color:var(--yellow);}
+
+.desc{
+  font-size:13px;
+  line-height:1.9;
+  color:rgba(255,255,255,0.4);
+  max-width:380px;
+  opacity:0;
+  animation:fadeUp 0.8s 0.5s ease forwards;
+}
+
+/* BOTTOM BAR */
+.bottom{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:5;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:1.5rem 2.5rem;
+  border-top:1px solid rgba(255,255,255,0.06);
+  opacity:0;
+  animation:fadeUp 1s 0.8s ease forwards;
+}
+
+.bottom-left{
+  font-size:10px;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  opacity:0.25;
+}
+
+.dots{
+  display:flex;gap:8px;align-items:center;
+}
+.dot{
+  width:8px;height:8px;border-radius:50%;
+  animation:pulse 2s infinite;
+}
+.dot.c{background:var(--cyan);animation-delay:0s;}
+.dot.m{background:var(--magenta);animation-delay:0.3s;}
+.dot.y{background:var(--yellow);animation-delay:0.6s;}
+
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:0.3;transform:scale(0.6);}
+}
+
+/* VERTICAL TEXT RIGHT */
+.side-text{
+  position:fixed;
+  right:2.5rem;
+  top:50%;
+  transform:translateY(-50%);
+  writing-mode:vertical-rl;
+  font-size:10px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  opacity:0.2;
+  z-index:5;
+  opacity:0;
+  animation:fadeUp 1s 1s ease forwards;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="top-bar"></div>
+<div class="bg-text">CWNKER</div>
+
+<nav>
+  <a class="nav-logo" href="#"><img src="cw.png"></a>
+  <span class="nav-tag">Portföy — 2026</span>
+</nav>
+
+<main>
+  <p class="eyebrow">Grafik Tasarım / Brandıng & UI/UX</p>
+  <h1 class="title">
+    ÇOK<br/>
+    <span class="c">YA</span><span class="m">KIN</span><span class="y">DA</span><span>.</span>
+  </h1>
+  <p class="desc">Üzerinde çalıştığım işler bitmek üzere.<br/>Biraz daha sabır.</p>
+</main>
+
+<span class="side-text">cwnker.com — COMING SOON</span>
+
+<div class="bottom">
+  <span class="bottom-left">© 2025 CWNKER</span>
+  <div class="dots">
+    <div class="dot c"></div>
+    <div class="dot m"></div>
+    <div class="dot y"></div>
+  </div>
+</div>
+
+<script>
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+document.querySelectorAll('a').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+});
+</script>
+</body>
+</html>
