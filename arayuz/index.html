@@ -1,0 +1,343 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.quiz-wrap { padding: 1.5rem 0; }
+.header { margin-bottom: 1.5rem; }
+.header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.header p { font-size: 13px; color: var(--color-text-secondary); }
+.progress-bar-bg { background: var(--color-background-secondary); border-radius: 8px; height: 6px; margin-bottom: 1.5rem; }
+.progress-bar-fill { height: 6px; border-radius: 8px; background: #1D9E75; transition: width 0.4s; }
+.stats { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 16px; flex: 1; min-width: 100px; text-align: center; }
+.stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 2px; }
+.stat-val { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+.q-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+.q-meta { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.q-text { font-size: 15px; font-weight: 500; color: var(--color-text-primary); line-height: 1.5; margin-bottom: 1rem; }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.opt-btn { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 14px; font-size: 14px; color: var(--color-text-primary); text-align: left; cursor: pointer; transition: all 0.15s; display: flex; align-items: flex-start; gap: 10px; }
+.opt-btn:hover:not(:disabled) { background: var(--color-background-primary); border-color: var(--color-border-primary); }
+.opt-btn.correct { background: #EAF3DE; border-color: #639922; color: #27500A; }
+.opt-btn.wrong { background: #FCEBEB; border-color: #E24B4A; color: #791F1F; }
+.opt-btn:disabled { cursor: default; }
+.opt-key { font-weight: 500; min-width: 16px; }
+.feedback { margin-top: 1rem; padding: 10px 14px; border-radius: var(--border-radius-md); font-size: 13px; line-height: 1.6; display: none; }
+.feedback.show { display: block; }
+.feedback.correct-fb { background: #EAF3DE; color: #27500A; border-left: 3px solid #639922; }
+.feedback.wrong-fb { background: #FCEBEB; color: #791F1F; border-left: 3px solid #E24B4A; }
+.nav-row { display: flex; gap: 8px; margin-top: 1rem; align-items: center; justify-content: space-between; }
+.btn { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 8px 16px; font-size: 14px; color: var(--color-text-primary); cursor: pointer; }
+.btn:hover { background: var(--color-background-secondary); }
+.btn-primary { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+.btn-primary:hover { background: #0F6E56; border-color: #0F6E56; }
+.hafta-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+.hf-btn { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; }
+.hf-btn.active { background: #E1F5EE; border-color: #1D9E75; color: #0F6E56; }
+.result-screen { display: none; text-align: center; padding: 2rem 1rem; }
+.result-screen.show { display: block; }
+.result-score { font-size: 48px; font-weight: 500; color: var(--color-text-primary); }
+.result-sub { font-size: 15px; color: var(--color-text-secondary); margin: 8px 0 24px; }
+.summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1.5rem; }
+.missed-list { text-align: left; border-top: 0.5px solid var(--color-border-tertiary); padding-top: 1rem; margin-top: 1rem; }
+.missed-item { font-size: 13px; color: var(--color-text-secondary); padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); line-height: 1.5; }
+.missed-item strong { color: var(--color-text-primary); }
+.streak-badge { display: inline-block; background: #FAEEDA; color: #854F0B; border-radius: 12px; font-size: 12px; padding: 2px 10px; }
+</style>
+
+<div class="quiz-wrap" id="app">
+
+<div id="setup-screen">
+  <div class="header">
+    <h1>UI/UX Finale Quiz</h1>
+    <p>110 soru • 4 hafta konu</p>
+  </div>
+  <div class="hafta-filter" id="hafta-filter">
+    <button class="hf-btn active" data-hafta="all">Tümü</button>
+    <button class="hf-btn" data-hafta="9">9. Hafta — Mobil Tasarım</button>
+    <button class="hf-btn" data-hafta="10">10. Hafta — UI/UX & Araçlar</button>
+    <button class="hf-btn" data-hafta="11">11. Hafta — Renk & Kimlik</button>
+    <button class="hf-btn" data-hafta="12">12. Hafta — Pixel & Ekran</button>
+    <button class="hf-btn" data-hafta="1314">13–14. Hafta — Navigasyon</button>
+  </div>
+  <div class="q-card">
+    <div class="q-text">Kaç soru çözmek istersin?</div>
+    <div class="options">
+      <button class="opt-btn" id="q10">10 soru — hızlı ısınma</button>
+      <button class="opt-btn" id="q25">25 soru — odaklı çalışma</button>
+      <button class="opt-btn" id="q50">50 soru — yarım sınav</button>
+      <button class="opt-btn" id="qall">Tümü — tam pratik</button>
+    </div>
+  </div>
+</div>
+
+<div id="quiz-screen" style="display:none">
+  <div class="stats">
+    <div class="stat-card"><div class="stat-label">Soru</div><div class="stat-val" id="stat-q">1/10</div></div>
+    <div class="stat-card"><div class="stat-label">Doğru</div><div class="stat-val" id="stat-c" style="color:#1D9E75">0</div></div>
+    <div class="stat-card"><div class="stat-label">Yanlış</div><div class="stat-val" id="stat-w" style="color:#E24B4A">0</div></div>
+    <div class="stat-card"><div class="stat-label">Seri</div><div class="stat-val" id="stat-s">0</div></div>
+  </div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="pbar" style="width:0%"></div></div>
+  <div class="q-card" id="q-card">
+    <div class="q-meta"><span id="q-num">Soru 1</span><span id="q-hafta"></span></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="q-opts"></div>
+    <div class="feedback" id="q-feedback"></div>
+  </div>
+  <div class="nav-row">
+    <button class="btn" id="btn-skip">Geç</button>
+    <button class="btn btn-primary" id="btn-next" disabled>Sonraki →</button>
+  </div>
+</div>
+
+<div class="result-screen" id="result-screen">
+  <div class="result-score" id="res-score"></div>
+  <div class="result-sub" id="res-sub"></div>
+  <div class="summary-grid">
+    <div class="stat-card"><div class="stat-label">Doğru</div><div class="stat-val" id="res-c" style="color:#1D9E75"></div></div>
+    <div class="stat-card"><div class="stat-label">Yanlış</div><div class="stat-val" id="res-w" style="color:#E24B4A"></div></div>
+    <div class="stat-card"><div class="stat-label">En uzun seri</div><div class="stat-val" id="res-s"></div></div>
+  </div>
+  <div style="display:flex; gap:8px; justify-content:center; margin-bottom:1.5rem; flex-wrap:wrap">
+    <button class="btn btn-primary" id="btn-retry">Tekrar çöz</button>
+    <button class="btn" id="btn-wrong-only">Yanlışları tekrar çöz</button>
+    <button class="btn" id="btn-home">Ana menü</button>
+  </div>
+  <div class="missed-list" id="missed-list"></div>
+</div>
+
+</div>
+
+<script>
+const ALL_Q = [
+  {h:"9",q:"Aşağıdakilerden hangisi mobil arayüz tasarımının özelliklerinden biridir?",opts:["Çok katmanlı menü yapıları","Hover etkileşimlerinin yoğun olması","Yatay kaydırma odaklı geniş tablolar","Mouse kullanımına göre tasarlama","İçeriklerin sade ve kompakt sunulması"],ans:4,tip:"Mobil cihazlarda ekran alanı sınırlıdır. Temel amaç bilişsel yükü azaltmaktır; içerikler sadeleştirilmeli, sadece kritik fonksiyonlar gösterilmelidir."},
+  {h:"9",q:"Mobil kullanıcı deneyiminde aşağıdakilerden hangisi daha önemlidir?",opts:["Karmaşık navigasyon","Geniş ekran desteği","Hover animasyonları","Hızlı erişim ve pratik kullanım","Büyük açılış videoları"],ans:3,tip:"Mobil kullanıcılar hareket halindedir ve 'micro-moment' deneyimi yaşar. Hız, akıcılık ve pratiklik mobil UX başarısının anahtarıdır."},
+  {h:"9",q:"Web ve mobil arayüzler arasındaki etkileşim farkı hangisidir?",opts:["Web'de mouse/klavye, mobilde dokunma","Web'de sesli komut, mobilde buton","Mobilde mouse zorunludur","Her iki platformda aynı etkileşim","Web'de sadece dokunmatik kullanım"],ans:0,tip:"Masaüstünde hover ve sağ tık gibi dolaylı etkileşimler var. Mobilde her şey parmak hareketlerine (kaydırma, kıstırma) dayanır."},
+  {h:"9",q:"Responsive tasarımın temel amacı nedir?",opts:["Tüm cihazlarda aynı sabit görünüm","Her cihaz için farklı kaynak kodu","Sadece mobil tasarım","Sadece masaüstüne odaklanmak","Tasarımın farklı ekran boyutlarına uyum sağlaması"],ans:4,tip:"Duyarlı tasarım, tek HTML/CSS kod tabanıyla masaüstü, tablet ve mobil ekranlara 'akışkan' şekilde uyum sağlar."},
+  {h:"9",q:"Adaptive tasarımın özelliği hangisidir?",opts:["Önceden hazırlanmış farklı tasarımlar kullanması","Sadece mobilde çalışması","İşletim sistemini değiştirmesi","Tek akışkan yapı kullanması","Hover etkileşimine dayanması"],ans:0,tip:"Adaptive tasarım, belirli breakpoint'ler (320px, 768px, 1200px) için önceden sabit şablonlar hazırlar; sunucu cihaza uygun şablonu yükler."},
+  {h:"9",q:"Mobile-First yaklaşımında tasarım süreci nasıl başlar?",opts:["Tablet öncelikli","Hover efektleri hazırlanır","Mobil ekranlardan başlanır","Masaüstü tasarımla başlanır","Baskı tasarımlarıyla başlanır"],ans:2,tip:"Mobil öncelikli yaklaşım, en küçük ekrandan başlayıp masaüstüne doğru zenginleştirir. Bu progressive enhancement daha temiz mimari sunar."},
+  {h:"9",q:"Mobil tasarımlarda grid sistemleri genellikle nasıl dönüşür?",opts:["Çok sütunlu yapı korunur","12 sütunlu sabit matrise döner","Grid tamamen kaldırılır","Daha karmaşık hale gelir","Tek sütunlu yapıya sadeleşir"],ans:4,tip:"Masaüstündeki 12 sütunlu grid, mobil ekranların dar yapısı nedeniyle genellikle 1–2 sütunlu düzene indirgenir."},
+  {h:"9",q:"Mobil tasarımda en önemli içerik neden üst bölümde yer almalıdır?",opts:["Kullanıcı yukarıdan aşağı tarar","Kullanıcı aşağıdan yukarı tarar","Tüm içerikler aynı önemde","Mobilde hover kullanılır","Alt bölümler kılıfla kapatılır"],ans:0,tip:"F ve Z tarama kalıplarında göz, sayfanın sol üstüne odaklanır. 'Above the fold' alanda kritik bilgileri sunmak kullanıcıyı elde tutmayı artırır."},
+  {h:"9",q:"Mobil arayüzlerde en yaygın navigasyon yapılarından biri hangisidir?",opts:["Breadcrumb dizilimleri","Hover menüleri","Hamburger menü","Masaüstü menüleri","Açılır pencere sistemi"],ans:2,tip:"Hamburger menü ekran alanı tasarrufu sağlar. Ancak en kritik 3–5 ana menü, alt navigasyon çubuğunda (tab bar) açık bırakılmalıdır."},
+  {h:"9",q:"Mobil kullanıcı davranışlarıyla ilgili hangisi doğrudur?",opts:["Reklamlara uzun süre odaklanır","Hızlı ve hedef odaklıdır","Sadece klavye kullanır","Yavaş ve dikkatli hareket eder","Uzun süre detaylı inceler"],ans:1,tip:"Mobil kullanıcılar sabırsızdır. 'Tarama' yaparlar. Tasarımda bilişsel sürtünmeleri (friction) sıfıra indirmek gerekir."},
+  {h:"9",q:"Mobil tasarımda erişilebilirlik neden önemlidir?",opts:["Kullanıcılar sadece bilgisayar kullanır","Hover efektleri gerekir","Kullanıcı ekranın her alanına kolay ulaşamaz","Cihazlar sadece sesle kontrol edilir","İçerikler gizlenmelidir"],ans:2,tip:"Thumb Zone teorisine göre ekranın alt ve orta kısımları parmağın en rahat eriştiği alanlardır. Kritik butonlar bu güvenli bölgelerde olmalıdır."},
+  {h:"9",q:"Doğru navigasyon tasarımının amacı nedir?",opts:["Kullanıcının kaybolmasını sağlamak","Ana sayfaya döndürmek","Kullanıcıyı hızlı ve kolay hedefe ulaştırmak","Karmaşık seçeneklerle yönlendirmek","Tüm içerikleri aynı anda göstermek"],ans:2,tip:"Başarılı navigasyon şu 3 soruyu yanıtlar: Şu an neredeyim? Nereden geldim? Bir sonraki adımda nereye gidebilirim?"},
+  {h:"9",q:"İçerik hiyerarşisi neyi ifade eder?",opts:["Hover animasyonlarını","Görsellerin rastgele yerleşimini","Sadece renk kullanımını","Bilgilerin önem sırasına göre düzenlenmesini","Tüm metinlerin aynı font boyutunda olmasını"],ans:3,tip:"Görsel hiyerarşi; boyut, renk, kontrast, tipografi ve white space kullanılarak elemanların önem derecesinin vurgulanmasıdır."},
+  {h:"9",q:"Mobil cihazlarda temel etkileşim biçimi hangisidir?",opts:["Klavye komutları","Optik göz takibi","Dokunma etkileşimi","Hover sistemi","Mouse kullanımı"],ans:2,tip:"Dokunma, mobil dünyasının alfabesidir. Kullanıcı ile ekran arasında fiziksel aracı olmadığı için etkileşim çok daha doğaldır."},
+  {h:"9",q:"Hover etkileşimi mobil cihazlarda neden kullanılmaz?",opts:["Mobilde klavye zorunludur","Sadece bilgisayarda çalışır","Ekranlar çok büyük","Elektriksel yalıtım zayıf","Mobil cihazlarda mouse yoktur"],ans:4,tip:"Dokunmatik ekranda parmağı ekrana değdirmeden hover tetiklenemez. Parmağın ilk teması doğrudan tıklama başlatır."},
+  {h:"9",q:"Dokunma alanlarının yeterli büyüklükte olması neden önemlidir?",opts:["Daha fazla içerik göstermek","Hover kullanımını artırmak","Parlaklığı artırmak","Tasarımı karmaşıklaştırmak","Yanlış dokunmaları önlemek"],ans:4,tip:"Apple minimum 44×44pt, Google 48×48dp öneriyor. Küçük butonlar 'fat finger' sorununa yol açarak kullanıcı deneyimini zedeler."},
+  {h:"9",q:"Kullanıcı geri bildirimi hangisiyle sağlanabilir?",opts:["Menüleri gizleyerek","Uygulamayı kapatarak","Hover kullanımını kapatarak","İçerikleri kaldırarak","Renk değişimleri ve animasyonlarla"],ans:4,tip:"Mikro etkileşimler (renk değişimi, titreşim, spinner) kullanıcıya sistemin çalıştığını gösterir ve sistem kontrolü hissi verir."},
+  {h:"9",q:"Performans kavramı neyi ifade eder?",opts:["Menü sayısını","Renk sayısını","Fiziksel ağırlık ve boyutu","Hover efektlerini","Arayüzün yüklenme ve çalışma hızını"],ans:4,tip:"3 saniyeden uzun açılan sitelerin yarısından fazlası terk ediliyor. Performans; optimize görseller, hafif fontlar ve temiz kodla doğrudan ilgili."},
+  {h:"9",q:"Optimizasyonun temel amacı nedir?",opts:["Arayüzü hızlı ve verimli hale getirmek","Daha fazla menü eklemek","Daha karmaşık tasarım","Sistemi yavaşlatmak","Batarya ömrünü tüketmek"],ans:0,tip:"Mobil cihazlar masaüstü kadar güçlü değildir. Optimizasyon; gereksiz süslemelerden kaçınarak en düşük donanımda bile akıcı çalışmayı hedefler."},
+  {h:"9",q:"Hangisi mobil tasarım optimizasyonuna örnektir?",opts:["Görselleri optimize etmek","Gereksiz içerikleri artırmak","Butonları küçültmek","Tüm metinleri el yazısı fonta dönüştürmek","Karmaşık navigasyon kullanmak"],ans:0,tip:"WebP/SVG formatları ve lazy loading tekniği önemli optimizasyon örnekleridir. Yüksek çözünürlüklü ham görseller yerine hafif formatlar tercih edilir."},
+  {h:"9",q:"Web tasarımını doğrudan küçülterek mobilde kullanmak neden problemlidir?",opts:["Mobilde görsel kullanılmaz","Mobilde internet yoktur","Mobil ekranlar daha geniş","Kullanım deneyimi olumsuz etkilenir","Telif hakları geçersiz olur"],ans:3,tip:"Masaüstü siteleri mouse ve geniş ekran için kurgulanır. Doğrudan küçültmek okunamaz fontlara, tıklanamaz butonlara ve yatay kaydırmaya yol açar."},
+  {h:"9",q:"Fazla içerik kullanımının sonucu hangisidir?",opts:["Kullanıcı deneyimini kolaylaştırır","Ekran çözünürlüğünü yükseltir","Performansı artırır","Kullanıcının dikkatini dağıtır","Navigasyonu sadeleştirir"],ans:3,tip:"Bilişsel aşırı yüklenme (cognitive overload) kullanıcının ne yapacağını şaşırmasına neden olur. Modern minimalist UI anlayışı bu soruna karşı gelişti."},
+  {h:"9",q:"Küçük butonların oluşturduğu temel problem nedir?",opts:["Rengin solmasına yol açar","Daha hızlı kullanım sağlar","Yanlış dokunmalara neden olur","Hover kullanımını artırır","İçerik yoğunluğunu azaltır"],ans:2,tip:"Butonların küçük olması ve birbirine yakın konumlandırılması büyük kullanılabilirlik hatasıdır. Aralarında yeterli white space bırakılmalıdır."},
+  {h:"9",q:"Karmaşık navigasyon yapıları kullanıcı üzerinde nasıl etki oluşturur?",opts:["Kullanımı kolaylaştırır","Yönünü kaybetmesine neden olur","Hafızayı doldurur","Daha hızlı erişim sağlar","Performansı artırır"],ans:1,tip:"Menü derinliği 3 katmandan fazlaysa kullanıcının zihinsel haritası çöker, hayal kırıklığı yaşar ve uygulamayı terk eder."},
+  {h:"9",q:"Responsive ve Adaptive tasarım arasındaki temel fark nedir?",opts:["Adaptive akışkan yapı kullanır","Responsive esnek, Adaptive ön tanımlı yapı kullanır","Responsive sadece Apple için","Responsive sabit yapı kullanır","İkisi tamamen aynı"],ans:1,tip:"Responsive = % ve esnek grid değerleriyle her piksele uyum sağlayan 'akışkan' yapı. Adaptive = belirli breakpoint'lerde devreye giren sabit şablonlar."},
+  {h:"9",q:"Mobil kullanıcıların dikkat süresi nasıldır?",opts:["Masaüstü ile aynı","Çok uzun","Tasarımla ilişkili değil","Akşam uzar gündüz kısalır","Daha kısadır"],ans:4,tip:"Tasarımda '3 saniye kuralı' geçerli: kullanıcı ne yapacağını anlamazsa odaklanmayı bırakır. Dikkat dağıtıcı ortamlarda kısa dikkat süresi normaldir."},
+  {h:"9",q:"Mobilde sık kullanılan alanlar nasıl tasarlanmalıdır?",opts:["Küçük boyutta","Kolay erişilebilir","Sayfanın en altında","Sesle görünür","Gizli"],ans:1,tip:"Fitts Kanunu'na göre hedefe ulaşma süresi büyüklük ve yakınlıkla ilişkili. En sık kullanılan butonlar parmağın rahat uzandığı alanlarda büyük olmalı."},
+  {h:"9",q:"Mobilde kullanıcı deneyimini artıran unsurlardan biri hangisidir?",opts:["Hızlı geri bildirimler","Karmaşık menüler","Gereksiz animasyonlar","Tam ekran reklam pencereleri","Çok küçük yazılar"],ans:0,tip:"'Sistem Durumunun Görünürlüğü' ilkesi: skeleton screens, progress bar ve bildirimler belirsizlik hissini yok ederek güven verir."},
+  {h:"9",q:"Mobil tasarımda sadeleştirme neden önemlidir?",opts:["Karmaşıklaştırmak için","Kullanıcının odaklanmasını kolaylaştırmak","Daha fazla içerik göstermek","Kod satırını azaltmak","Hover kullanımını artırmak"],ans:1,tip:"Görsel gürültü azaldıkça kullanıcı odaklanması kolaylaşır. İşlevsel olmayan dekoratif çizgi ve gölgelerin ayıklanması dönüşüm oranını artırır."},
+  {h:"9",q:"Başarılı bir mobil arayüzün temel özelligi hangisidir?",opts:["Karmaşık yapı","Sadece amiral gemisi cihazlarda çalışma","Yavaş yüklenme","Çok fazla seçenek","Hızlı, erişilebilir ve anlaşılır olma"],ans:4,tip:"Kusursuz mobil UI/UX üçgeni: Hız (teknik performans), Erişilebilirlik (herkesin kullanabilmesi), Kullanılabilirlik (net ve basit akışlar)."},
+  {h:"10",q:"UI kavramı neyi ifade eder?",opts:["Veritabanı mimarisi","Kullanıcının duygusal deneyimi","Sunucu performansı","Ürünün görsel arayüzü","Yazılım kodları"],ans:3,tip:"UI (User Interface), dijital bir ürünün yapısal estetiğini temsil eder. Butonlar, renkler, tipografi, ikonlar ve sayfa düzeni UI kapsamındadır."},
+  {h:"10",q:"UX kavramının temel amacı hangisidir?",opts:["Sunucu maliyetini azaltmak","Sadece görsel tasarım","Kullanıcının hedeflerine kolay ulaşması","Kod yazımını hızlandırmak","Pazarlama bütçesini düşürmek"],ans:2,tip:"UX; bir sistem ile etkileşimdeki tüm algı ve duyguları kapsar. UI görünümle ilgilenirken, UX akış, kullanılabilirlik ve bilişsel süreçlerle ilgilenir."},
+  {h:"10",q:"Prototiplemenin temel amacı nedir?",opts:["Testi atlayıp yayınlamak","Doğrudan kod geliştirmek","Sadece renk seçmek","Geliştirme öncesi görselleştirme ve test","Tasarım dosyasını küçültmek"],ans:3,tip:"Prototipleme, yazılım aşamasına geçmeden kullanıcı akışlarını ve tasarım mantığını gerçek kullanıcılarda test etmeye imkan tanır."},
+  {h:"10",q:"Düşük sadakatli prototiplerin temel özelliği nedir?",opts:["Nihai kodun otomatik üretilmesi","Detaylı animasyonlar","Hızlı ve ekonomik olması","Sadece geliştiriciler için","Nihai ürüne tamamen benzemesi"],ans:2,tip:"Low-Fidelity prototipler projenin erken aşamasında fikir üretmek için kullanılır. Görsel detaylardan arındırılmıştır; işlevselliğe odaklanılır."},
+  {h:"10",q:"Yüksek sadakatli prototipler hangi amaçla kullanılır?",opts:["Gerçek kullanıcı deneyimini simüle etmek","Kodu tamamen kaldırmak","Kağıt üzerinde çizim","Backend veri akışlarını şifrelemek","Sunucu testi"],ans:0,tip:"High-Fidelity prototipler, nihai ürüne görsel stil ve etkileşim açısından çok yakın modellerdir. Son kullanıcı testleri ve paydaş sunumlarında kullanılır."},
+  {h:"10",q:"Prototiplemenin avantajlarından biri hangisidir?",opts:["Süreci yavaşlatmak","Hataları geliştirme öncesinde fark etmek","Tasarım hatalarını gizlemek","Kullanıcı testlerini kaldırmak","Yazılım ekibinin tasarım yapmasını engellemek"],ans:1,tip:"Boehm Yasası: geliştirme sonrası hata düzeltme maliyeti, prototip aşamasından kat kat fazladır. Prototipleme bütçeyi ve zamanı korur."},
+  {h:"10",q:"Wireframe aşamasında temel olarak ne belirlenir?",opts:["Yazılım lisansları","Sunucu altyapısı","Bilgi mimarisi ve ekran düzeni","Veritabanı yönetimi","Renk paleti ve tipografi"],ans:2,tip:"Wireframe (tel kafes), bir arayüzün mimari planıdır. Elemanların nereye yerleşeceğini ve bilgi hiyerarşisini gösterir; siyah-beyaz çizilir."},
+  {h:"10",q:"Sketch hangi platformda çalışır?",opts:["Linux","Android","Windows Phone","Windows Desktop","macOS"],ans:4,tip:"Sketch, macOS'a özel (native) geliştirilmiş vektörel tasarım aracıdır. Çapraz platform desteği olmaması en büyük kısıtlamasıdır."},
+  {h:"10",q:"Sketch'in güçlü yönlerinden biri hangisidir?",opts:["Kod editörü olması","Yapay zeka ile kod yazması","Sadece mobil kullanım","Zayıf eklenti desteği","Vektör tabanlı tasarım yapısı"],ans:4,tip:"Sketch'in vektör tabanlı altyapısı, tasarım elementlerinin kalitesi bozulmadan her çözünürlüğe (Retina dahil) mükemmel ölçeklenmesini sağlar."},
+  {h:"10",q:"Artboard sistemi hangi avantajı sağlar?",opts:["Farklı ekran boyutlarını tek dosyada yönetme","Kodlama işlemlerini hızlandırma","Kullanıcı verilerini şifreleme","Veritabanı oluşturma","Sunucu performansını artırma"],ans:0,tip:"Artboard sistemi, mobil/tablet/masaüstü ekranları aynı dijital tuval üzerinde görebilmeyi ve responsive uyumu tek dosyada kontrol etmeyi sağlar."},
+  {h:"10",q:"InVision'ın temel kullanım amacı nedir?",opts:["Kod derlemek","Statik ekranları etkileşimli prototiplere dönüştürmek","Sunucu yönetmek","Veritabanı yönetmek","Sıfırdan vektörel çizim"],ans:1,tip:"InVision, statik tasarım görsellerini buluta aktarıp üzerine hotspot ekleyerek ekranları birbirine bağlar ve çalışıyor hissi simüle eder."},
+  {h:"10",q:"InVision'da ekip üyeleri ne yapabilir?",opts:["Sunucu kurabilir","Prototip üzerinde yorum bırakabilir","Donanım tasarlayabilir","Donanım parçalarını kontrol edebilir","İşletim sistemi geliştirebilir"],ans:1,tip:"InVision'ın popüler özelliği prototip üzerine pin ekleyerek nokta atışı yorum bırakılabilmesidir. Revizyon süreçleri e-posta trafiğinden kurtulur."},
+  {h:"10",q:"Clickable Prototype ne sağlar?",opts:["Kullanıcı akışlarını simüle eder","Google Play'de yayınlar","Sunucu maliyetini düşürür","Verileri şifreler","Statik ekranları yazılıma dönüştürür"],ans:0,tip:"Tıklanabilir prototip, kullanıcıların gerçek akışı deneyimlemesini sağlar. Kullanıcı testlerinde görev başarı oranlarını ölçmek için kritik araçtır."},
+  {h:"10",q:"Marvel'in öne çıkan özelliği hangisidir?",opts:["Sadece terminal ile çalışması","Karmaşık kod editörü sunması","Yalnızca masaüstünde çalışması","Sadece geliştiricilere hitap etmesi","Sürükle-bırak arayüzüyle kolay kullanım"],ans:4,tip:"Marvel, düşük öğrenme eğrisiyle öne çıkar. Kağıt çizimleri kamerayla taratarak etkileşimli prototipe dönüştürme yeteneği çok kullanışlıdır."},
+  {h:"10",q:"Marvel'de ekranları birbirine bağlayarak ne oluşturulabilir?",opts:["Tıklanabilir kullanıcı akışları","Kod derleyici","Veritabanı","Yapay zeka tabloları","İşletim sistemi"],ans:0,tip:"Marvel'de statik kareler birleştirilerek giriş ekranından görev tamamlamaya kadar tüm kullanıcı yolculuğu (user journey) canlandırılabilir."},
+  {h:"10",q:"Sketch'in dezavantajlarından biri hangisidir?",opts:["Yalnızca macOS desteği","Güçlü sembol sistemi","Dar eklenti kütüphanesi","Hafif çalışması","Kolay öğrenme"],ans:0,tip:"Sketch'in Windows/Linux desteği olmaması, hetereojen ekiplerde dosya paylaşımı sorunlarına yol açmış ve endüstrinin tarayıcı tabanlı platformlara kaymasını hızlandırmıştır."},
+  {h:"10",q:"InVision hangi konuda güçlüdür?",opts:["Veri analizi","Oyun motoru","3D modelleme","Ekip çalışması ve geri bildirim","Donanım tasarımı"],ans:3,tip:"InVision; tasarım sistemleri yönetimi, geliştirici inspect modu ve çoklu paydaş yönetimiyle kapsamlı bir ekosistemdir."},
+  {h:"10",q:"Marvel hangi kullanıcı grubu için daha uygundur?",opts:["Sunucu mühendisleri","Sadece yazılımcılar","Ağ yöneticileri","Tasarım öğrencileri ve yeni başlayanlar","Büyük veri analistleri"],ans:3,tip:"Marvel, kompleks araç karmaşıklığından kaçınmak isteyenler ve MVP modellerini hızlıca yatırımcılara sunmak isteyen yeni başlayanlar için idealdir."},
+  {h:"10",q:"Güncel tasarım trendlerinde hangi platformun yükselişinden bahsedilir?",opts:["CorelDRAW","PageMaker","Figma","Illustrator","Photoshop"],ans:2,tip:"Figma; bulut tabanlı yapısı, gerçek zamanlı çalışma ve tüm tasarım süreçlerini tek tarayıcı penceresinde birleştirmesiyle tasarım dünyasına hakim olmuştur."},
+  {h:"10",q:"UI/UX araç seçiminde dikkat edilmesi gereken önemli nokta nedir?",opts:["Süreci araçtan önce düşünmek","Sadece popüler aracı kullanmak","Yalnızca ücretsiz araç seçmek","Tüm araçlardan kaçınmak","Sadece en pahalıyı seçmek"],ans:0,tip:"Araçlar sadece birer vasıtadır. Önemli olan doğru süreç kurmaktır: hedef kitle analizi, bilgi mimarisi ve Design Thinking süreci."},
+  {h:"11",q:"Kurumsal kimlik neyi kapsar?",opts:["Sadece logo","Sadece veritabanı sorguları","Logo, renk, tipografi ve marka dili","Sadece sosyal medya içerikleri","Yalnızca renk"],ans:2,tip:"Kurumsal kimlik, görsel unsurların (logo, renk, tipografi) yanı sıra ses tonu, değerler ve iletişim stratejisini de kapsar. Amaç tutarlı marka algısı yaratmak."},
+  {h:"11",q:"Kullanıcıların ilk görsel izlenimi yaklaşık ne kadar sürede oluşur?",opts:["30 saniye","1 dakika","5 saniye","50 milisaniye","10–15 saniye"],ans:3,tip:"Araştırmalar, web arayüzü hakkında yargıya varmanın ortalama 50ms (0.05 saniye) sürdüğünü gösteriyor. Bu sürede renkler ve hiyerarşi güven duygusunu belirler."},
+  {h:"11",q:"Kurumsal rengin temel amacı hangisidir?",opts:["Kod yazımını kolaylaştırmak","Sunucu performansını artırmak","Markayı rakiplerinden ayırmak","Rastgele görsel oluşturmak","Sunucu maliyetini düşürmek"],ans:2,tip:"Kurumsal renk mimarisi markanın pazar konumlandırmasını destekler, hedef kitleyle duygusal bağ kurar ve görsel farkındalık (brand recognition) yaratır."},
+  {h:"11",q:"HEX renk kodları en çok hangi alanda kullanılır?",opts:["Donanım geliştirmede","Fiziksel mürekkep karışımlarında","Matbaa baskılarında","Veritabanı yönetiminde","Web tasarımlarında"],ans:4,tip:"HEX (Hexadecimal) kodları, 16 tabanlı sayı sistemiyle dijital ekranlar için renk tanımlar. CSS ve UI araçlarında standart olarak kullanılır."},
+  {h:"11",q:"CMYK renk sistemi daha çok hangi alan için kullanılır?",opts:["Baskı ve matbaa","Mobil uygulamalar","Web siteleri","Oyun motorları","Ekran parlaklığı optimizasyonu"],ans:0,tip:"CMYK (Cyan, Magenta, Yellow, Key/Black), kağıt gibi fiziksel nesneler için eksiltmeli renk modelidir. Dijital ekranlar ışık yayan RGB modelini kullanır."},
+  {h:"11",q:"Renklerin UI tasarımındaki temel rollerinden biri hangisidir?",opts:["Kod yazmak","Sunucu kurmak","Kullanıcıyı yönlendirmek","Veritabanı oluşturmak","Sözdizimi hatalarını düzeltmek"],ans:2,tip:"UI'da renk, estetikten öte işlevsel iletişim aracıdır. Görsel hiyerarşi kurar, dikkati yönlendirir, tıklanabilirliği belirtir."},
+  {h:"11",q:"Kırmızı renk genellikle hangi durumu ifade eder?",opts:["Arka plan düzeni","Bilgilendirme","Hata ve aciliyet","Başarılı nötr durum","Başarı"],ans:2,tip:"Kırmızı evrensel olarak tehlike, dur, hata ve aciliyet çağrışımı yapar. Geri dönüşümsüz aksiyonlar ve kritik sistem hataları için 'durum rengi' olarak kullanılır."},
+  {h:"11",q:"Yeşil renk kullanıcıya genellikle ne hissettirir?",opts:["Karmaşa","Gizlilik","Tehlike","Acil müdahale","Başarı ve denge"],ans:4,tip:"Yeşil; güven, onay, denge ve huzur çağrışımı yapar. 'Ödeme Başarılı' gibi görev tamamlama bildirimlerinde ve success state'lerde kullanılır."},
+  {h:"11",q:"UI tasarımında primary renk en çok hangi alanlarda kullanılır?",opts:["Pasif metin bloklarında","Arka plan desenlerinde","CTA butonları ve önemli aksiyonlarda","Gizli içeriklerde","Kod editörlerinde"],ans:2,tip:"Primary Color, markanın en güçlü tonu; CTA butonları, aktif menü elemanları ve kullanıcının gerçekleştirmesi istenen temel eylem alanlarında tercih edilir."},
+  {h:"11",q:"Nötr renklerin temel amacı hangisidir?",opts:["Arka plan ve okunabilirlik sağlamak","Tüm alanları vurgulamak","Batarya tüketimini artırmak","Hover efektleri artırmak","Kullanıcıyı şaşırtmak"],ans:0,tip:"Nötr renkler (siyah, beyaz, gri) arayüzün gövdesini oluşturur. Okunabilirliği artırır, canlı renkleri dengeler ve göz yorgunluğunu önler."},
+  {h:"11",q:"Renk paleti oluştururken önerilen maksimum renk sayısı kaçtır?",opts:["10–12","15–20","3–5","40–50","25–30"],ans:2,tip:"Profesyonel UI tasarımında 1 primary, 1–2 secondary ve birkaç nötr/durum rengi içeren 3–5 renkli sınırlı palet önerilir."},
+  {h:"11",q:"60-30-10 kuralındaki %10'luk bölüm neyi temsil eder?",opts:["Arka plan rengi","Vurgu ve CTA renkleri","Grid sistemleri","Yazı tiplerini","Kullanıcı profil verisi oranı"],ans:1,tip:"60-30-10 formülündeki %10, 'Vurgu Rengi' (Accent Color). Sadece kullanıcının tıklamasını/fark etmesini istediğimiz en kritik CTA butonları için saklanır."},
+  {h:"11",q:"60-30-10 kuralındaki %60'lık alan genellikle ne için kullanılır?",opts:["Hata mesajları","Uyarı penceresi alanı","Hover animasyonları","Arka plan ve geniş yüzeyler","CTA butonları"],ans:3,tip:"Kural içindeki %60 'Baskın Renk'. Genellikle nötr tonlarda seçilir; göze en az batan tuvali oluşturarak diğer içeriklerin öne çıkmasını sağlar."},
+  {h:"11",q:"Mavi rengin UI tasarımında en yaygın çağrışımı nedir?",opts:["Tehlike","Eğlence","Kaos","Panik ve güvensizlik","Güven ve profesyonellik"],ans:4,tip:"Renk psikolojisinde mavi; dürüstlük, sadakat ve güvenle eşleşir. Bankacılık, sigorta ve kurumsal teknoloji platformlarında en çok tercih edilen renktir."},
+  {h:"11",q:"Minimum AA kontrast oranı normal metinler için kaçtır?",opts:["10:1","2:1","1:1","3:1","4.5:1"],ans:4,tip:"WCAG 2.1 standartlarına göre normal metinler için minimum kontrast oranı 4.5:1 (AA Seviyesi). Görme zayıflığı olanlar ve güneş ışığındaki kullanıcıları kapsar."},
+  {h:"11",q:"AAA kontrast oranı hangisidir?",opts:["2:1","1:1","0.5:1","4.5:1","7:1"],ans:4,tip:"WCAG'ın en yüksek erişilebilirlik seviyesi AAA, normal metinler için minimum 7:1 oranı şart koşar. Kamu ve sağlık platformları için önerilir."},
+  {h:"11",q:"Tasarımda yalnızca renkle anlam vermek neden problemlidir?",opts:["Tasarımı hızlandırır","Sunucu maliyetini artırır","APK boyutunu şişirir","Kodlama süresini artırır","Renk körü kullanıcılar bilgiyi ayırt edemeyebilir"],ans:4,tip:"Renk körlüğü olan bireyler renk farkını göremeyebilir. Hatalar ve başarılar renklerle birlikte ikonlar ve açıklayıcı metinlerle desteklenmelidir."},
+  {h:"11",q:"CTA butonlarında dikkat çekmek için en önemli unsur nedir?",opts:["Yüksek kontrastlı renk seçmek","Düşük kontrast kullanmak","Arka planla aynı renk","Tüm butonları aynı yapmak","Butonun rengini arka planla eşitlemek"],ans:0,tip:"CTA butonunun fark edilmesi etrafındaki elementlerle zıtlığına bağlıdır. Yüksek kontrast, Fitts Kanunu çerçevesinde gözün hedefe hızlı yönelmesini sağlar."},
+  {h:"11",q:"State color sisteminde sarı renk genellikle neyi ifade eder?",opts:["Tamamlanmış işlem","Engelleme ve silme","Başarı","Uyarı ve dikkat","Bilgilendirme"],ans:3,tip:"Durum renkleri sisteminde sarı/turuncu, yıkıcı olmayan ama dikkat gereken durum için 'Uyarı' mesajlarına ayrılmıştır. 'Depolama Alanı Azalıyor' gibi."},
+  {h:"11",q:"Başarılı bir UI renk sisteminin temel özelliklerinden biri hangisidir?",opts:["Tutarsız CTA renkleri","Erişilebilir, tutarlı ve yönlendirici olması","Tüm alanların aynı renkte olması","Sürekli değişen renkler","Rastgele renk kullanımı"],ans:1,tip:"Kusursuz UI renk sistemi; WCAG standartlarına uygun, tutarlı (aynı durum = aynı renk) ve kullanıcıyı sezgisel yönlendiren yapıya sahip olmalıdır."},
+  {h:"12",q:"Pixel kavramı neyi ifade eder?",opts:["Batarya kapasitesini","Dijital ekrandaki en küçük görüntü birimini","Ekran parlaklık sensörü","İşlemci hızını","Ekranın fiziksel boyutunu"],ans:1,tip:"Piksel, ekranın kontrol edilebilen, ışık yayan en küçük yapı taşıdır. Tüm ikonlar ve yazılar piksellerin bir araya gelmesiyle oluşur."},
+  {h:"12",q:"Aynı çözünürlüklü iki cihaz neden farklı görünebilir?",opts:["Üretim yılı farklı","Fiziksel ekran boyutu ve yoğunluğu farklı","Aynı işletim sistemi yok","Kamera kalitesi değişmiş","İnternet hızları farklı"],ans:1,tip:"Çözünürlük aynı olsa bile piksellerin yayıldığı fiziksel alan boyutu (inç değeri) değişebilir. 5 inçte sıkışık, 10 inçte geniş pikseller → farklı görünüm."},
+  {h:"12",q:"Ekran boyutu genellikle hangi ölçü birimiyle ifade edilir?",opts:["mm","px","inch (inç)","cm","dp"],ans:2,tip:"Ekran boyutları, sol altten sağ üste uzanan diyagonal çizgiyle hesaplanır ve 'inç' (1 inç=2.54cm) birimiyle ifade edilir. Örn: 6.1 inç."},
+  {h:"12",q:"Resolution (çözünürlük) neyi ifade eder?",opts:["Toplam pixel sayısını","Dokunma hassasiyetini","İşlemci performansını","Ekran parlaklığını","GPU maksimum frekansını"],ans:0,tip:"Çözünürlük, yatay x dikey piksel sayısının çarpımıdır. Örn: Full HD = 1080×1920. Çözünürlük arttıkça ekranın sunabileceği detay miktarı artar."},
+  {h:"12",q:"PPI kavramı neyi ölçer?",opts:["Ekran parlaklığını","Batarya ömrünü","FPS (kare hızı)","İnternet bağlantısını","Birim alana düşen pixel miktarını"],ans:4,tip:"PPI (Pixels Per Inch), ekranın piksel yoğunluğunu belirtir. Yüksek PPI değerinde pikseller insan gözünün ayırt edemeyeceği kadar küçülür → keskin görüntü."},
+  {h:"12",q:"Yüksek yoğunluklu ekranların temel avantajı nedir?",opts:["Daha keskin ve ayrıntılı görüntü","Daha büyük ikonlar","Daha az veri tüketimi","Daha bulanık görüntü","Daha düşük performans"],ans:0,tip:"High-Density / Retina ekranlarda pikseller arası boşluklar görünmez hale gelir. Tipografi ince çizgilerle pürüzsüz görünür ve premium UX üretilir."},
+  {h:"12",q:"Sabit piksel değerleriyle tasarım yapmak neden problemlidir?",opts:["Kod yazımını hızlandırır","Batarya tüketimini azaltır","Farklı cihazlarda kırık arayüzlere yol açar","Sunucu maliyetini artırır","İndirme boyutunu artırır"],ans:2,tip:"'width: 400px' gibi mutlak değerler, küçük ekranda taşma yaratır, yüksek DPI'da tıklanamaz küçüklüğe düşebilir. Her zaman esnek ölçü sistemi kullanılmalı."},
+  {h:"12",q:"Android'in yoğunluk yaklaşımındaki temel amaç nedir?",opts:["Batarya kapasitesini dengelemek","Çözünürlüğü sabitlemek","Farklı yoğunluklara otomatik uyum sağlamak","Sadece tablet desteği","Tek cihaz desteği"],ans:2,tip:"Android, dp (density independent pixel) ile cihaz fragmentasyonunu çözer. Sistem PPI değerine göre dp ölçülerini otomatik ölçekler."},
+  {h:"12",q:"Android tasarım yaklaşımının temel özelliği hangisidir?",opts:["Tek çözünürlük","Sabit ekran yapısı","Sadece küçük ekran","Tek ekran kartına bağımlılık","Uyarlanabilir ve esnek tasarım"],ans:4,tip:"Android ekosistemi esneklik üzerine kuruludur. Bileşenler dikeyden yataya geçişte ve katlanabilir telefonlarda kendini yeniden konumlandırabilmelidir."},
+  {h:"12",q:"iOS cihazlarında ölçekleme neden daha öngörülebilirdir?",opts:["Apple sınırlı cihaz çeşitliliğine sahip","Pixel yoğunluğu kullanılmaz","Tüm cihazlar aynı çözünürlükte","Düşük işlemci gücü","Android tabanlı olduğu için"],ans:0,tip:"Apple hem donanımı hem yazılımı üretir. Hedef ekran boyutları, en-boy oranları ve piksel çarpanları (@2x, @3x) bellidir. Bu öngörülebilirliği artırır."},
+  {h:"12",q:"iOS'ta kullanılan temel ölçü sistemi hangisidir?",opts:["rem","px","pt (point)","cm","sp"],ans:2,tip:"iOS'ta tasarım birimleri Point (pt) üzerine kurgulanır. Retina ekranda sistem 1pt'yi 4 veya 9 fiziksel piksel ile doldurur. Boyut değişmeden netlik artar."},
+  {h:"12",q:"UI elemanlarının ölçeklenmesinde hangisi önemlidir?",opts:["Sadece arka plan rengi","Rastgele font boyutu","Sabit ikon kullanımı","En parlak renklerin üstte olması","Dokunma alanının korunması"],ans:4,tip:"Eleman küçüldüğünde ergonomik işlevsellik korunmalıdır. Tıklama hedefi alanı (hit target) standart sınırların altına düşmemelidir."},
+  {h:"12",q:"Mobil tipografide en önemli öncelik hangisidir?",opts:["Animasyon kullanımı","Renk çeşitliliği","Gölge efekti","Okunabilirlik","Hover efekti"],ans:3,tip:"Mobil cihazlar hareket halinde ve farklı ışık koşullarında kullanılır. Süslü fontlar yerine okunabilirliği yüksek sans-serif yazı aileleri tercih edilmeli."},
+  {h:"12",q:"Android'de önerilen minimum dokunma alanı kaç dp'dir?",opts:["48×48 dp","72×72 dp","96×96 dp","32×32 dp","24×24 dp"],ans:0,tip:"Material Design'a göre her tıklanabilir eleman en az 48×48 dp alana sahip olmalıdır. Fiziksel olarak ~9×9mm'e denk gelir ve başparmak temas yüzeyini karşılar."},
+  {h:"12",q:"Mobil layout yaklaşımında hangi yapı tercih edilmelidir?",opts:["Tamamen rastgele düzen","Statik ve katı yerleşim","Sabit piksel tabanlı yapı","Sadece yatay tasarım","Esnek ve akışkan yerleşim"],ans:4,tip:"Esnek ve akışkan yerleşimler (fluid layouts), yüzdelik oranlar kullanır. Ekran genişliğine göre içerik kutuları yayılır veya alt alta dizilir."},
+  {h:"12",q:"Aspect ratio neden önemlidir?",opts:["Batarya kapasitesini değiştirir","Ağırlık merkezini belirler","Sadece kamera performansını etkiler","Yerleşim ve içerik akışını etkiler","İşlemci hızını belirler"],ans:3,tip:"Ekran en-boy oranı (16:9, 20:9) ekranın dikey/yatay organizasyonunu ve navigasyon yerleşim kararlarını doğrudan etkiler."},
+  {h:"12",q:"Safe area kavramının temel amacı nedir?",opts:["İçeriğin sistem alanlarıyla çakışmasını önlemek","İşlemciyi hızlandırmak","Batarya tasarrufu","Kamera çözünürlüğünü artırmak","Parmağın daha hızlı taramasını sağlamak"],ans:0,tip:"Safe Area, notch/delikli kamera ve home indicator gibi donanımsal kesintilerin kritik buton ve metinleri gizlemesini önleyen koruyucu sınır şerididir."},
+  {h:"12",q:"Dynamic Island hangi platforma özgüdür?",opts:["Linux Mobile","Android HarmonyOS","Android","Windows Phone","iOS"],ans:4,tip:"Dynamic Island, Apple'ın iPhone 14 Pro ile tanıttığı; donanımsal ekran deliğini animasyonlarla yaşayan UI elemanına dönüştüren iOS yapısıdır."},
+  {h:"12",q:"Android'de en yaygın tasarım dili hangisidir?",opts:["Fluent Design","Human Interface Guidelines","Aqua Interface","Aqua UI","Material Design"],ans:4,tip:"Material Design, Google tarafından geliştirilen açık kaynak tasarım sistemidir. Işık, gölge, materyal hissi ve akıcı animasyon prensiplerini kullanır."},
+  {h:"12",q:"Mobil UI tasarımındaki temel hedef hangisidir?",opts:["Sabit tasarım kullanmak","Tüm cihazlarda tutarlı kullanıcı deneyimi","Her cihazda farklı deneyim","Sadece büyük ekranlara odaklanmak","Sadece pahalı telefonlarda çalışma"],ans:1,tip:"Mobil UX tasarımının nihai başarısı cihaz bağımsızlığına dayanır. Düşük bütçeli cihazdan amiral gemisi tablede aynı kalite ve tutarlılık şarttır."},
+  {h:"1314",q:"Navigasyonun dijital ürünlerdeki temel görevi hangisidir?",opts:["Güvenlik protokollerini optimize etmek","Yazılım kodlarını düzenlemek","Sunucu maliyetini azaltmak","Sadece görsel estetik","Kullanıcının içeriğe kolay ulaşması"],ans:4,tip:"Navigasyon, bilgi mimarisini (IA) görünür kılan omurgadır. En az tıklamayla hedefe ulaşmak terk oranlarını düşürür, dönüşüm oranlarını artırır."},
+  {h:"1314",q:"Desktop navigasyonun en önemli avantajlarından biri nedir?",opts:["Geniş ekran sayesinde tüm seçeneklerin görünmesi","Menülerin tamamen gizlenmesi","Hover kullanımının olmaması","Sadece CLI ile çalışabilmesi","Tek dokunuş zorunluluğu"],ans:0,tip:"Masaüstü geniş ekranı, primer ve sekonder navigasyon öğelerinin aynı anda açık kalmasına izin verir. Kullanıcı konum kaybı (context loss) önlenir."},
+  {h:"1314",q:"Mobil navigasyonda menülerin gizlenmesinin temel nedeni nedir?",opts:["Renk kullanımını artırmak","Küçük ekran alanı kısıtlaması","Yazılım maliyetini azaltmak","Cihazın ağırlığını hafifletmek","Daha fazla animasyon eklemek"],ans:1,tip:"Mobil cihazlardaki en büyük kısıt ekran alanının darlığıdır. Bilişsel aşırı yüklenmeyi engellemek için navigasyon varsayılan olarak gizlenir."},
+  {h:"1314",q:"Responsive yaklaşımın temel amacı hangisidir?",opts:["Hover efektlerini artırmak","Her cihaz için kodu yeniden yazmak","Sabit ekran tasarımı","Sadece mobile odaklanmak","Aynı içeriği farklı cihazlara uyarlamak"],ans:4,tip:"Responsive mimari; aynı içeriğin farklı çözünürlüklerde kırılmadan, o ekranın yapısına uygun dizilmesini sağlar. Tutarlı marka deneyimi sunar."},
+  {h:"1314",q:"Hamburger menü hangi simge ile temsil edilir?",opts:["☰","🔍","★","⌂","►"],ans:0,tip:"Hamburger menü (☰), 1981'de Xerox Star için tasarlandı. Akıllı telefonlarla birlikte mobil dünyanın en popüler tasarım kalıplarından biri oldu."},
+  {h:"1314",q:"Hamburger menünün temel avantajı hangisidir?",opts:["Ekran alanını koruması","Hover kullanımını zorunlu kılması","İşlemci hızını artırması","Tüm menüleri sürekli görünür tutması","Sadece masaüstünde çalışması"],ans:0,tip:"Hamburger menü, karmaşık kategori ağaçlarını tek ikonun arkasında saklayarak arayüze görsel özgürlük ve minimalizm kazandırır."},
+  {h:"1314",q:"Hamburger menünün dezavantajlarından biri hangisidir?",opts:["Dosya boyutunu şişirmesi","Responsive desteği sunması","Fazla görünür olması","İçerik yoğunluğunu azaltması","Keşfedilebilirliği düşürmesi"],ans:4,tip:"'Gözden uzak, akıldan uzak' kuralı: menü elemanlarını gizlemek keşfedilebilirliği (discoverability) düşürür ve etkileşim maliyetini artırır."},
+  {h:"1314",q:"Hamburger menü özellikle hangi yapılarda kullanılır?",opts:["Sadece oyun arayüzlerinde","Derin hiyerarşik yapılarda","Tek sayfalık sitelerde","İki sekmeli uygulamalarda","BIOS ayar ekranlarında"],ans:1,tip:"E-ticaret (Amazon, Trendyol), kurumsal paneller gibi çok katmanlı yapılarda hamburger menü kaçınılmazdır. Derin hiyerarşileri düzenli organize eder."},
+  {h:"1314",q:"Segmentli menü hangisi için idealdir?",opts:["Karmaşık veritabanı tabloları","Çok katmanlı menüler","Az sayıda eş değer seçenek","Hover odaklı tasarımlar","Gizli navigasyon"],ans:2,tip:"Segmentli menüler, birbirini dışlayan (mutually exclusive) az sayıda seçenek kümesi için idealdir. Tek dokunuşta paralel görünümler arasında geçiş sağlar."},
+  {h:"1314",q:"Segmentli menüler için önerilen ideal seçenek sayısı kaçtır?",opts:["10–15","7–9","Sınırsız","50–100","2–5"],ans:4,tip:"Miller Yasası (7±2 kuralı) ve mobil kısıtlamalar göz önüne alındığında 2–5 seçenek idealdir. Fazla seçenek Hick Yasası gereği karar süresini uzatır."},
+  {h:"1314",q:"Segmentli menülerde aktif durum neden net görünmelidir?",opts:["Kod yazımını kolaylaştırmak","Animasyon eklemek","Batarya tasarruf modunu aktifleştirmek","Sunum süresini uzatmak","Kullanıcının hangi seçenekte olduğunu anlaması"],ans:4,tip:"Nielsen'ın 'Sistem Durumunun Görünürlüğü' ilkesi: aktif segmentin yüksek kontrast veya kayan göstergeyle vurgulanması 'Ben neredeyim?' sorusunu yanıtlar."},
+  {h:"1314",q:"Segmentli menünün kullanım örneği hangisidir?",opts:["Log dosyaları temizleme akışı","Çok katmanlı kategori ağacı","Hover tabanlı mega menü","Gizli yan menü","Günlük/Haftalık/Aylık filtreleme"],ans:4,tip:"Aynı verinin farklı zaman kırılımlarında gösterilmesi (Günlük/Haftalık/Aylık grafik) veya iki mod arasında geçiş segmentli menünün en başarılı kullanım senaryosudur."},
+  {h:"1314",q:"Segmentli menünün keşfedilebilirlik açısından avantajı nedir?",opts:["Gizli yapı","Hover desteği","Tüm seçeneklerin görünür olması","Sesli komutla çalışma","Ekstra tıklama gerektirmesi"],ans:2,tip:"Segmentli yapılar tüm alternatifleri doğrudan gösterir (yüksek affordance değeri). Hamburger gibi ekstra arama/tıklama gerekmez; kullanıcı akışı hızlanır."},
+  {h:"1314",q:"Hamburger ile segmentli menü arasındaki temel fark nedir?",opts:["Segmentlinin gizli navigasyon kullanması","İkisinin aynı olması","Hamburger menünün derin yapılara uygun olması","Hamburger'ın sadece backend için olması","Segmentlinin sadece desktop için olması"],ans:2,tip:"Hamburger = geniş, derin, dallanmış hiyerarşiler için 'kütüphane'. Segmentli = aynı düzeydeki 3–4 seçeneği yan yana sunan pratik 'anahtar' görevi."},
+  {h:"1314",q:"WCAG standartları neyle ilgilidir?",opts:["Sunucu performansı","Erişilebilirlik standartları","Blokzincir şifreleme","Veritabanı tasarımı","Kamera çözünürlüğü"],ans:1,tip:"WCAG (Web Content Accessibility Guidelines), dijital ürünlerin engeli olan bireyler dahil herkes tarafından eşit deneyimlenebilmesini sağlayan uluslararası standarttır."},
+  {h:"1314",q:"Yaygın tasarım hatalarından biri hangisidir?",opts:["Tutarlı navigasyon","Basit menü yapıları","Yeterli kontrast","Standart sistem yazı tiplerini tercih etmek","Küçük dokunma alanları"],ans:4,tip:"Küçük dokunma hedefleri 'fat finger' sorununa yol açar. Özellikle form ve ödeme adımlarında yüksek sürtünmeye ve kullanıcının uygulamayı terk etmesine neden olur."},
+  {h:"1314",q:"Başarılı bir sunum sürecinin ilk adımı nedir?",opts:["Slayt ses efektleri seçmek","Bağlamı belirlemek","Görselleri silmek","Kod yazmak","Animasyon eklemek"],ans:1,tip:"Design Thinking'de sunum ilk adımı 'Bağlamı' (Context) kurmaktır: kim dinliyor, hangi kullanıcı problemi çözülüyor, hangi stratejik hedefe hizmet ediliyor."},
+  {h:"1314",q:"Web arayüz sunumlarında hangi unsur vurgulanmalıdır?",opts:["Grid yapısı ve görsel hiyerarşi","Sunucu kodları","Veritabanı bağlantıları","İşletim sistemi sürümü","Sunucu işlemci modeli"],ans:0,tip:"Profesyonel UI sunumunda, Grid sistemleri, hizalama disiplini, Gestalt ilkelerine dayalı boşluk yönetimi ve tipografik hiyerarşi tasarımın kalitesini belgeler."},
+  {h:"1314",q:"Mobil sunum yapılırken cihaz frame kullanmanın amacı nedir?",opts:["Kod yazımını kolaylaştırmak","Tasarımı daha gerçekçi göstermek","İnternet tüketimini simüle etmek","Animasyonları kaldırmak","Görselleri küçültmek"],ans:1,tip:"Mockup/frame içinde sunum 'bağlamsal doğrulama' sağlar. Paydaşlar buton boyutları ve safe area sınırlarını somut ve inandırıcı biçimde algılar."},
+  {h:"1314",q:"Başarılı UI/UX sunumlarında temel yaklaşım hangisidir?",opts:["Tüm slaytları metinle doldurmak","Rastgele trend kelimelerle savunmak","Her slayta fazla bilgi koymak","Sadece teknik detay anlatmak","Tasarım kararlarını kullanıcı faydasıyla açıklamak"],ans:4,tip:"Etkili UI/UX sunumu 'Neden' sorusuna yanıt verir. Kullanıcı testleri, veri analitiği ve ergonomik kriterlere dayalı empati odaklı hikaye anlatımı kurulmalıdır."}
+];
+
+let filteredQ = [], sessionQ = [], current = 0, correct = 0, wrong = 0, streak = 0, maxStreak = 0, answered = [], wrongOnly = false, selectedHafta = "all", qCount = 0;
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+document.querySelectorAll(".hf-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".hf-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedHafta = btn.dataset.hafta;
+  });
+});
+
+function filterQ(){
+  if(selectedHafta==="all") return ALL_Q;
+  return ALL_Q.filter(q=>q.h===selectedHafta);
+}
+
+function startQuiz(count, pool){
+  filteredQ = shuffle(pool);
+  sessionQ = count==="all" ? filteredQ : filteredQ.slice(0, Math.min(count, filteredQ.length));
+  qCount = sessionQ.length;
+  current = 0; correct = 0; wrong = 0; streak = 0; maxStreak = 0; answered = [];
+  document.getElementById("setup-screen").style.display="none";
+  document.getElementById("result-screen").classList.remove("show");
+  document.getElementById("quiz-screen").style.display="block";
+  showQ();
+}
+
+[["q10",10],["q25",25],["q50",50],["qall","all"]].forEach(([id,n])=>{
+  document.getElementById(id).addEventListener("click",()=>startQuiz(n===10?10:n===25?25:n===50?50:"all", filterQ()));
+});
+
+function haftalabel(h){ return {9:"9.Hafta",10:"10.Hafta",11:"11.Hafta",12:"12.Hafta",1314:"13-14.Hafta"}[h]||""; }
+
+function showQ(){
+  if(current>=sessionQ.length){ showResult(); return; }
+  const q = sessionQ[current];
+  document.getElementById("q-num").textContent = "Soru "+(current+1);
+  document.getElementById("q-hafta").textContent = haftalabel(q.h);
+  document.getElementById("q-text").textContent = q.q;
+  document.getElementById("stat-q").textContent = (current+1)+"/"+qCount;
+  document.getElementById("stat-c").textContent = correct;
+  document.getElementById("stat-w").textContent = wrong;
+  document.getElementById("stat-s").textContent = streak;
+  document.getElementById("pbar").style.width = (current/qCount*100)+"%";
+  const opts = document.getElementById("q-opts");
+  opts.innerHTML = "";
+  ["A","B","C","D","E"].forEach((k,i)=>{
+    if(i>=q.opts.length) return;
+    const b = document.createElement("button");
+    b.className = "opt-btn";
+    b.innerHTML = '<span class="opt-key">'+k+')</span><span>'+q.opts[i]+'</span>';
+    b.addEventListener("click",()=>selectOpt(i, b, q));
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById("q-feedback");
+  fb.className = "feedback"; fb.textContent = "";
+  document.getElementById("btn-next").disabled = true;
+}
+
+function selectOpt(i, btn, q){
+  document.querySelectorAll(".opt-btn").forEach(b=>b.disabled=true);
+  const fb = document.getElementById("q-feedback");
+  const isCorrect = i===q.ans;
+  document.querySelectorAll(".opt-btn")[q.ans].classList.add("correct");
+  if(isCorrect){
+    btn.classList.add("correct");
+    correct++; streak++;
+    if(streak>maxStreak) maxStreak=streak;
+    fb.className="feedback correct-fb show";
+    fb.innerHTML="<strong>✓ Doğru!</strong> "+q.tip;
+  } else {
+    btn.classList.add("wrong");
+    wrong++; streak=0;
+    fb.className="feedback wrong-fb show";
+    fb.innerHTML="<strong>✗ Yanlış.</strong> "+q.tip;
+    answered.push(q);
+  }
+  document.getElementById("stat-c").textContent=correct;
+  document.getElementById("stat-w").textContent=wrong;
+  document.getElementById("stat-s").textContent=streak;
+  document.getElementById("btn-next").disabled=false;
+}
+
+document.getElementById("btn-next").addEventListener("click",()=>{ current++; showQ(); });
+document.getElementById("btn-skip").addEventListener("click",()=>{ streak=0; document.getElementById("stat-s").textContent=0; current++; showQ(); });
+
+function showResult(){
+  document.getElementById("quiz-screen").style.display="none";
+  const rs = document.getElementById("result-screen");
+  rs.classList.add("show");
+  const pct = Math.round(correct/qCount*100);
+  document.getElementById("res-score").textContent = pct+"%";
+  let msg = pct>=90?"Mükemmel! Finali geçersin 🏆":pct>=75?"Çok iyi! Biraz daha çalış ✅":pct>=60?"Fena değil, ama tekrar lazım 📚":"Daha çok pratik gerek, devam et 💪";
+  document.getElementById("res-sub").textContent = msg;
+  document.getElementById("res-c").textContent=correct;
+  document.getElementById("res-w").textContent=wrong;
+  document.getElementById("res-s").textContent=maxStreak;
+  const ml = document.getElementById("missed-list");
+  if(answered.length>0){
+    ml.innerHTML="<p style='font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px'>Yanlış cevapladıkların:</p>";
+    answered.forEach((q,i)=>{
+      const d=document.createElement("div");
+      d.className="missed-item";
+      d.innerHTML="<strong>S"+(i+1)+" ("+haftalabel(q.h)+"):</strong> "+q.q+"<br><span style='color:#1D9E75'>✓ "+q.opts[q.ans]+"</span>";
+      ml.appendChild(d);
+    });
+  } else { ml.innerHTML="<p style='font-size:13px;color:#1D9E75;text-align:center;padding:1rem'>Tüm soruları doğru cevapladın! 🎉</p>"; }
+}
+
+document.getElementById("btn-retry").addEventListener("click",()=>startQuiz("all",sessionQ));
+document.getElementById("btn-wrong-only").addEventListener("click",()=>{ if(answered.length>0) startQuiz("all",answered); });
+document.getElementById("btn-home").addEventListener("click",()=>{
+  document.getElementById("result-screen").classList.remove("show");
+  document.getElementById("quiz-screen").style.display="none";
+  document.getElementById("setup-screen").style.display="block";
+});
+</script>
